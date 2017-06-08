@@ -65,7 +65,7 @@ public class Compile extends AppCompatActivity {
                         try {
                             JSONObject obj = new JSONObject(response);
                             Log.e("asdf5555", obj.toString() + " " + obj.length());
-                            output.setText(obj.optJSONObject("run_status").optString("output"));
+                            output.setText(obj.optString("compile_status")+": "+obj.optJSONObject("run_status").optString("output"));
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -75,6 +75,7 @@ public class Compile extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         //This code is executed if there is an error.
+                        output.setText(error.getMessage());
                         Log.wtf("asdf", error);
                     }
                 }) {

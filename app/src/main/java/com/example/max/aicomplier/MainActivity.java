@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private boolean update = true;
     private ImageView point1,point2,point3,point4;
     private int button=0;
+    private boolean moved = false;
 
 
     BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -193,39 +194,48 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                 br = bl;
                 bl = tmp;
             }
-            Log.e("DEBUG","Top left: "+tl.toString()+" Top Right: "+tr.toString()+" Bottom Left: "+bl.toString()+" Bottom Right: "+br.toString());
 
-            int topWidth = (int)(tr.x-tl.x);
-            int bottomWidth = (int)(br.x-bl.x);
-            int resultWidth;
-            if(topWidth>bottomWidth)
-                resultWidth = topWidth;
-            else
-                resultWidth = bottomWidth;
+            if(moved) {
 
-            int topHeight = (int)(tr.x-tl.x);
-            int bottomHeight = (int)(br.x-bl.x);
-            int resultHeight;
-            if(topHeight>bottomHeight)
-                resultHeight = topHeight;
-            else
-                resultHeight = bottomHeight;
 
-            float[] source = {(float)tl.x,(float)tl.y,(float)tr.x,(float)tr.y,(float)bl.x,(float)bl.y,(float)br.x,(float)br.y};
-            float[] destination = {0,0,resultWidth,0,0,resultHeight,resultWidth,resultHeight};
+                Log.e("DEBUG", "Top left: " + tl.toString() + " Top Right: " + tr.toString() + " Bottom Left: " + bl.toString() + " Bottom Right: " + br.toString());
 
-            Mat src = new Mat(4,1,CV_32FC2);
-            Mat dst = new Mat(4,1,CV_32FC2);
-            src.put(0,0,source);
-            dst.put(0,0,destination);
+                int topWidth = (int) (tr.x - tl.x);
+                int bottomWidth = (int) (br.x - bl.x);
+                int resultWidth;
+                if (topWidth > bottomWidth)
+                    resultWidth = topWidth;
+                else
+                    resultWidth = bottomWidth;
 
-            Mat homography = Imgproc.getPerspectiveTransform(src,dst);
-            Log.e("asdf",homography.toString());
-            Mat finalMat = warp.clone();
-            Imgproc.warpPerspective(warp,finalMat,homography,new Size(resultWidth,resultHeight));
+                int topHeight = (int) (tr.x - tl.x);
+                int bottomHeight = (int) (br.x - bl.x);
+                int resultHeight;
+                if (topHeight > bottomHeight)
+                    resultHeight = topHeight;
+                else
+                    resultHeight = bottomHeight;
 
-            next(finalMat);
-            return finalMat;
+                float[] source = {(float) tl.x, (float) tl.y, (float) tr.x, (float) tr.y, (float) bl.x, (float) bl.y, (float) br.x, (float) br.y};
+                float[] destination = {0, 0, resultWidth, 0, 0, resultHeight, resultWidth, resultHeight};
+
+                Mat src = new Mat(4, 1, CV_32FC2);
+                Mat dst = new Mat(4, 1, CV_32FC2);
+                src.put(0, 0, source);
+                dst.put(0, 0, destination);
+
+                Mat homography = Imgproc.getPerspectiveTransform(src, dst);
+                Log.e("asdf", homography.toString());
+                Mat finalMat = warp.clone();
+                Imgproc.warpPerspective(warp, finalMat, homography, new Size(resultWidth, resultHeight));
+
+                next(finalMat);
+                return finalMat;
+            }
+            else{
+                next(warp);
+                return warp;
+            }
         }
 
 
@@ -278,6 +288,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         Bitmap img = Bitmap.createBitmap(mat.width(),mat.height(), Bitmap.Config.ARGB_8888 );
         Utils.matToBitmap(mat,img);
+
         Log.e("asdf",img.toString());
 
         checkFile(new File(data+"tessdata/"));
@@ -286,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         mTess.init(data,"eng");
         mTess.setImage(img);
         Log.e("asdf2",mTess.getUTF8Text());
-        startActivity(new Intent(MainActivity.this,Compile.class).putExtra("code",mTess.getUTF8Text()));
+        startActivity(new Intent(MainActivity.this,Compile.class).putExtra("code",""+mTess.getUTF8Text()));
     }
 
 
@@ -345,6 +356,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                     //transform();
                     break;
                 case MotionEvent.ACTION_MOVE:
+                    moved  =true;
                     int x_cord = (int)event.getRawX();
                     int y_cord = (int)event.getRawY();
 
@@ -352,8 +364,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                     if(y_cord>windowheight){y_cord=windowheight;}
 
 
-                    layoutParams.leftMargin = x_cord ;
-                    layoutParams.topMargin = y_cord - 100;
+                    layoutParams.leftMargin = x_cord - 150  ;
+                    layoutParams.topMargin = y_cord ;
 
                     v.setLayoutParams(layoutParams);
                     break;
